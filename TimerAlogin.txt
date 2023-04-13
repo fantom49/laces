@@ -1,0 +1,206 @@
+package com.example.timer;
+
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.application.Platform;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
+import javafx.scene.input.MouseEvent;
+import javafx.stage.Stage;
+import javafx.util.Duration;
+
+
+public class LoginController {
+
+    @FXML
+    public Button closeButton;
+
+    @FXML
+    private TextField usernameField;
+
+    @FXML
+    private PasswordField passwordField;
+
+    @FXML
+    private Label errorLabel;
+
+    @FXML
+    private void handleLoginButton(ActionEvent event) {
+        String username = usernameField.getText();
+        String password = passwordField.getText();
+
+        if (username.equals("matej") && password.equals("admin")) {
+            System.out.println("Přihlášení úspěšné");
+            // Login se povedl - zavře se okno a pustí nás do aplikace
+            ((Stage) usernameField.getScene().getWindow()).close();
+        } else {
+            // Login se nepovedl - error
+            errorLabel.setText("Invalid username or password");
+            System.out.println("Přihlášení se nezdařilo");
+        }
+    }
+}
+
+
+package com.example.timer;
+
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.layout.BorderPane;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+
+public class TimerApp extends Application {
+
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+        // Loadnutí Login.fxml a loginStage
+        FXMLLoader loginLoader = new FXMLLoader(getClass().getResource("Login.fxml"));
+        Parent loginRoot = loginLoader.load();
+        Stage loginStage = new Stage();
+        loginStage.setTitle("Login");
+        loginStage.setScene(new Scene(loginRoot));
+
+        // nastavení controlleru pro Login.fxml
+        LoginController loginController = loginLoader.getController();
+        loginStage.setOnCloseRequest(event -> System.exit(0)); // pokud se nelogneme a zavřeme login okno - celá app zemře
+
+        // zobrazení login stage a čekání na uzavření
+        loginStage.showAndWait();
+
+
+        // loadnutí fxml filu a nastavení BorderPane jako root
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("swag.fxml"));
+        System.out.println("Aplikace běží");
+        BorderPane root = loader.load();
+
+        // nastevení titlu a scény
+        primaryStage.setTitle("Giga Láčes Časovač");
+        primaryStage.setScene(new Scene(root));
+
+        // nastavení controleru
+        TimerController controller = loader.getController();
+        controller.setStage(primaryStage);
+
+        // zobrazení
+        primaryStage.initStyle(StageStyle.UNDECORATED);
+        primaryStage.show();
+    }
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+}
+
+
+
+package com.example.timer;
+
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.input.MouseEvent;
+import javafx.stage.Stage;
+import javafx.util.Duration;
+
+public class TimerController {
+
+    private Timeline timeline;
+    private Stage stage;
+
+    @FXML
+    private Label timerLabel;
+
+    @FXML
+    private Button startButton;
+
+    @FXML
+    private Button stopButton;
+
+    @FXML
+    private Button clearButton;
+
+    private double xOffset = 0;
+    private double yOffset = 0;
+
+
+
+    @FXML
+    private void initialize() {
+        // Vytvoření a spuštění timeline animace
+        timeline = new Timeline(new KeyFrame(Duration.seconds(1), e -> updateTimer()));
+        timeline.setCycleCount(Animation.INDEFINITE);
+    }
+
+    @FXML
+    private void startTimer() {
+        timeline.play();
+        System.out.println("Timer se spustil");
+    }
+
+    @FXML
+    private void stopTimer() {
+        timeline.pause();
+        System.out.println("Timer je pozastaven");
+    }
+
+    @FXML
+    private void clearTimer() {
+        timeline.stop();
+        timerLabel.setText("00:00:00");
+        System.out.println("Timer reset");
+    }
+
+    private void updateTimer() {
+        String[] time = timerLabel.getText().split(":");
+        int hours = Integer.parseInt(time[0]);
+        int minutes = Integer.parseInt(time[1]);
+        int seconds = Integer.parseInt(time[2]);
+
+        seconds++;
+
+        if (seconds == 60) {
+            seconds = 0;
+            minutes++;
+        }
+
+        if (minutes == 60) {
+            minutes = 0;
+            hours++;
+        }
+
+        String newTime = String.format("%02d:%02d:%02d", hours, minutes, seconds);
+        timerLabel.setText(newTime);
+    }
+
+    public void setStage(Stage stage) {
+        this.stage = stage;
+    }
+
+    @FXML
+    private void handleClose() {
+        stage.close();
+        System.out.println("Aplikace se ukončuje");
+    }
+
+    public void handleMousePressed(MouseEvent mouseEvent) {
+        xOffset = mouseEvent.getSceneX();
+        yOffset = mouseEvent.getSceneY();
+    }
+
+    public void handleMouseDragged(MouseEvent mouseEvent) {
+        Stage stage = (Stage) timerLabel.getScene().getWindow();
+        stage.setX(mouseEvent.getScreenX() - xOffset);
+        stage.setY(mouseEvent.getScreenY() - yOffset);
+    }
+}
