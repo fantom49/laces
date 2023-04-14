@@ -1,36 +1,5 @@
 package com.example.douckopgr;
 
-import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
-import javafx.scene.image.Image;
-import javafx.stage.Stage;
-
-import java.io.IOException;
-
-public class HelloApplication extends Application {
-    @Override
-    public void start(Stage stage) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("Quiz.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 600, 450);
-        stage.setTitle("quiz!");
-        stage.setScene(scene);
-        stage.getIcons().add(new Image( getClass().getResourceAsStream("quiz.png")));
-        stage.setResizable(false);
-        stage.show();
-
-    }
-
-    public static void main(String[] args) {
-        launch();
-    }
-}
-
-
-
-
-package com.example.douckopgr;
-
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -123,97 +92,26 @@ public class HelloController implements Initializable {
     }
 }
 
+//////////////////////////////////////////////////////
 
 package com.example.douckopgr;
 
-import javafx.application.Platform;
-import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
-import javafx.scene.control.*;
-import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
-import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Text;
-import javafx.stage.FileChooser;
 
-import java.net.URL;
-import java.util.ResourceBundle;
+public class MojeBarvy {
+    private String name;
+    private Color barva;
 
-public class HelloController implements Initializable {
-    @FXML
-    private Menu file;
-
-    @FXML
-    private MenuItem close;
-
-    @FXML
-    private Rectangle rectangle;
-
-    @FXML
-    private TextField tf1;
-
-    @FXML
-    private Button check;
-
-    @FXML
-    private Button next;
-
-    @FXML
-    private Label score;
-
-    @FXML
-    private Text number;
-
-    @FXML
-    private Text vysledek;
-    private int iscore = 0;
-
-    @FXML
-    private ImageView imgView;
-
-    private MojeBarvy barvy[]={new MojeBarvy("red", Color.RED),new MojeBarvy("green", Color.GREEN), new MojeBarvy("blue", Color.BLUE),new MojeBarvy("yellow", Color.YELLOW), new MojeBarvy("black", Color.BLACK)};
-
-    private MojeBarvy actBarva;
-    public void closeApp(ActionEvent actionEvent) {
-        Platform.exit();
-
+    public MojeBarvy(String name, Color barva) {
+        this.name = name;
+        this.barva = barva;
     }
 
-    public void nextColor(ActionEvent actionEvent) {
-        actBarva = barvy[(int)Math.round(Math.random()*(barvy.length-1))];
-        rectangle.setFill(actBarva.getBarva());
-        tf1.setText("");
-        vysledek.setVisible(false);
-        next.setVisible(false);
-
+    public String getName() {
+        return name;
     }
 
-
-    public void checkName(ActionEvent actionEvent) {
-        String odpoved = tf1.getText();
-        if(odpoved.equalsIgnoreCase(actBarva.getName())){
-            iscore += 10;
-            number.setText(String.valueOf(iscore));
-            vysledek.setText("Right");
-            vysledek.setVisible(true);
-            next.setVisible(true);
-        }else {
-            iscore -= 10;
-            number.setText(String.valueOf(iscore));
-            vysledek.setText("Falls");
-            vysledek.setVisible(true);
-            next.setVisible(true);
-        }
-    }
-
-   // public void save()
-
-
-
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
-      nextColor(null);
+    public Color getBarva() {
+        return barva;
     }
 }
