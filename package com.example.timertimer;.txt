@@ -1,0 +1,184 @@
+package com.example.timertimer;
+
+import javafx.animation.TranslateTransition;
+import javafx.application.Platform;
+import javafx.beans.Observable;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
+import javafx.util.Duration;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+
+import java.net.URL;
+import java.util.ResourceBundle;
+
+public class HelloController implements Initializable,Runnable {
+
+    @FXML
+    private ComboBox<Integer> comboH;
+
+    @FXML
+    private ComboBox<Integer> comboM;
+
+    @FXML
+    private ComboBox<Integer> comboS;
+
+    @FXML
+    private AnchorPane panelNastaveni;
+
+    @FXML
+    private AnchorPane panelOdpoctu;
+
+    private Thread t;
+    private boolean bezi = false;
+    private int sekundy;
+    private boolean pause = false;
+    Object monitor = new Object();
+    MediaPlayer mp;   //todo zjistit proč MediaPlayer nefunguje ->HOTOVO
+    MediaPlayer player;
+
+
+    @FXML
+    private Label titleH;
+
+    @FXML
+    private Label titleM;
+
+    @FXML
+    private Label titleS;
+
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        ObservableList<Integer> hodinyList = FXCollections.observableArrayList();
+        ObservableList<Integer> hodinyASekundyList = FXCollections.observableArrayList();
+        ObservableList<Integer> minutyASekundyList = FXCollections.observableArrayList();
+        for(int i=0; i<60; i++) {                   //todo opravit integer ->HOTOVO
+            if(i>=0 && i<24) hodinyList.add(i);
+            minutyASekundyList.add(i);
+        }
+        comboH.setItems(hodinyList);
+        comboH.setValue(0);
+        comboM.setItems(minutyASekundyList);
+        comboM.setValue(0);
+        comboS.setItems(minutyASekundyList);
+        comboS.setValue(0 );
+    }
+
+    public void startTimer(ActionEvent actionEvent) {
+    animaceNahoru();
+    t = new Thread(this);
+    t.setDaemon(true);  //Daemon aby se to ukončilo
+        bezi = true;
+        nacteniCasu();
+        t.start();;
+    }
+
+    private void nacteniCasu() {
+        sekundy = comboH.getValue()*3600+comboM.getValue()*60+comboS.getValue();
+    }
+
+    public void stopTimer(ActionEvent actionEvent) {
+        animaceDolu();
+        bezi = false;
+    }
+    public void animaceNahoru() {
+        TranslateTransition tt1 = new TranslateTransition();
+        tt1.setDuration(Duration.millis(600));
+        tt1.setToX(0);
+        tt1.setToY(-190.4);
+        tt1.setNode(panelNastaveni);
+        tt1.play();
+    }
+    public void animaceDolu () {
+        TranslateTransition tt1 = new TranslateTransition();
+        tt1.setDuration(Duration.millis(600));
+        tt1.setToX(0);
+        tt1.setToY(0);      //musí tam být nula, ale 190.4 dává větší smysl :)
+        tt1.setNode(panelNastaveni);
+        tt1.play();
+    }
+
+    @Override
+    public void run() {         //pocet casu ve vlakne
+        long cas = System.currentTimeMillis() + 1000; //aktulani cas + 1 sek
+        while (bezi) {
+            synchronized (monitor) {
+                if(pause) {
+                    try {
+                        monitor.wait();
+                    } catch (InterruptedException e) {
+                        System.err.println(e.getMessage());
+                        throw new RuntimeException(e);
+                    }
+                }
+                if (System.currentTimeMillis() > cas) {   //ubehla 1 sek
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            aktualizujCas();
+                        }
+                    });
+                    if (sekundy == 0) {
+
+                        //NEFUNGUJE ---->
+
+                        Media pick = new Media("bell.mp3");
+                        MediaPlayer player = new MediaPlayer(pick);
+                        player.setVolume(1);
+                        player.play();
+
+                       // Media bell = new Media(getClass().getResource("bell.mp3").toString());
+                        //mp = new MediaPlayer(bell);
+                        //mp.play();
+                        bezi = false;
+                    }
+                    else sekundy--;
+                    cas = System.currentTimeMillis() + 1000;
+                }
+            }
+        }
+    }
+
+    private void aktualizujCas() {
+    short hod = (short)(sekundy/3600); //přetypování na short
+    titleH.setText((hod<10)?"0"+hod:""+hod);
+    short min = (short)((sekundy%3600)/60);
+    titleM.setText((min<10)?"0"+min:""+min); //todo dodělat sekundy ->HOTOVO
+    short sek = (short)(sekundy%60);
+    titleS.setText((sek<10)?"0"+sek:""+sek);
+    }
+
+    public void pauseTimer(ActionEvent actionEvent) {
+    if(!pause) pause = true;
+    else {
+        bezi = false;
+        synchronized (monitor) {
+            monitor.notify(); //monitor.notifyall();
+            pause = false;
+        }
+    }
+    }
+
+    public void resetTimer(ActionEvent actionEvent) {
+
+        nacteniCasu();
+    }
+
+    public void closeNastaveni(MouseEvent mouseEvent) {
+
+        Platform.exit();
+    }
+
+    public void closeOdpocet(MouseEvent mouseEvent) {
+
+        Platform.exit();
+    }
+}
